@@ -10,7 +10,6 @@ variable "aws_region" {
   description = "AWS region to deploy resources"
   type        = string
   default     = "us-east-1"
-
 }
 
 variable "project_name" {
@@ -27,11 +26,6 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "region" {
-  description = "AWS region"
-  type        = string
-  default     = "us-west-2"
-}
 
 variable "vpc_cidr" {
   description = "CIDR block for VPC"
