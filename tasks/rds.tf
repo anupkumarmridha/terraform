@@ -108,17 +108,14 @@ resource "aws_db_instance" "mysql" {
 
 
   # Security
-  deletion_protection       = var.db_deletion_protection
-  skip_final_snapshot       = !var.db_final_snapshot
-  final_snapshot_identifier = var.db_final_snapshot ? "${local.name_prefix}-mysql-final-snapshot-${formatdate("YYYY-MM-DD-hhmm", timestamp())}" : null
+  deletion_protection = var.db_deletion_protection
+  skip_final_snapshot = !var.db_final_snapshot
+  final_snapshot_identifier = var.db_final_snapshot ? "${local.name_prefix}-mysql-final-snapshot-${replace(timestamp(), ":", "-")}" : null
 
   # Multi-AZ for production
   multi_az = var.multi_az
 
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-mysql"
-    Type = "Database"
-  })
+  tags = local.database_tags
 
   depends_on = [
     aws_cloudwatch_log_group.rds_logs
@@ -200,8 +197,10 @@ resource "aws_db_instance" "mysql_replica" {
   # Performance Insights - only enable for supported instance classes
   performance_insights_enabled = var.db_replica_instance_class != "db.t3.micro" && var.db_replica_instance_class != "db.t2.micro"
 
-  tags = merge(local.common_tags, {
-    Name = "${local.name_prefix}-mysql-replica"
-    Type = "Database-Replica"
-  })
+  # Security - Add these for read replica
+  deletion_protection = var.db_deletion_protection
+  skip_final_snapshot = !var.db_final_snapshot
+  final_snapshot_identifier = var.db_final_snapshot ? "${local.name_prefix}-mysql-replica-${count.index + 1}-final-snapshot-${replace(timestamp(), ":", "-")}" : null
+
+  tags = local.database_replica_tags
 }
