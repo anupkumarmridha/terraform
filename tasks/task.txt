@@ -1,0 +1,1 @@
+AWS - Create a basic web server on  AWS using Terraform to automate the setup of an VPC, subnet, EC2 instance and its associated security group.
