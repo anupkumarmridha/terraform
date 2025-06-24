@@ -78,7 +78,7 @@ resource "aws_instance" "bastion" {
   ami                         = data.aws_ami.al2023.id
   instance_type               = var.instance_type
   subnet_id                   = var.public_subnet_id
-  associate_public_ip_address = var.enable_eip ? false : true
+  associate_public_ip_address = !var.enable_eip
   key_name                    = var.create_key_pair ? aws_key_pair.bastion_key[0].key_name : var.key_name
   vpc_security_group_ids      = var.security_group_ids
   monitoring                  = var.enable_detailed_monitoring
@@ -108,6 +108,10 @@ resource "aws_instance" "bastion" {
 
   lifecycle {
     create_before_destroy = true
+    ignore_changes = [
+      ami,
+      associate_public_ip_address,
+    ]
   }
 
   depends_on = [aws_key_pair.bastion_key]

@@ -5,6 +5,8 @@ locals {
     Project     = var.project_name
     Environment = var.environment
     ManagedBy   = "terraform"
+    createdby = var.createdby
+    modifiedby = var.modifiedby
   }
 
   # Environment specific configurations

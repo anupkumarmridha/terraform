@@ -15,6 +15,18 @@ variable "environment" {
   default     = "dev"
 }
 
+variable "createdby" {
+  description = "User who created the resources"
+  type        = string
+  default     = "anup-training"
+}
+
+variable "modifiedby" {
+  description = "User who last modified the resources"
+  type        = string
+  default     = "anup-training"
+}
+
 # VPC Variables
 variable "vpc_cidr" {
   description = "CIDR block for VPC"
@@ -189,4 +201,108 @@ variable "enable_bastion_ipv6" {
   type        = bool
   default     = false
   
+}
+
+
+# ALB Configuration Variables
+variable "enable_alb_deletion_protection" {
+  description = "Enable deletion protection for ALB"
+  type        = bool
+  default     = false
+}
+
+variable "enable_alb_access_logs" {
+  description = "Enable access logs for ALB"
+  type        = bool
+  default     = true
+}
+
+variable "alb_target_group_port" {
+  description = "Port for ALB target group"
+  type        = number
+  default     = 8080
+}
+
+variable "alb_target_group_protocol" {
+  description = "Protocol for ALB target group"
+  type        = string
+  default     = "HTTP"
+  
+  validation {
+    condition     = contains(["HTTP", "HTTPS"], var.alb_target_group_protocol)
+    error_message = "ALB target group protocol must be HTTP or HTTPS."
+  }
+}
+
+variable "alb_health_check_path" {
+  description = "Health check path for ALB target group"
+  type        = string
+  default     = "/health"
+}
+
+variable "alb_health_check_healthy_threshold" {
+  description = "Number of consecutive health checks before considering target healthy"
+  type        = number
+  default     = 2
+  
+  validation {
+    condition     = var.alb_health_check_healthy_threshold >= 2 && var.alb_health_check_healthy_threshold <= 10
+    error_message = "Health check healthy threshold must be between 2 and 10."
+  }
+}
+
+variable "alb_health_check_unhealthy_threshold" {
+  description = "Number of consecutive health checks before considering target unhealthy"
+  type        = number
+  default     = 2
+  
+  validation {
+    condition     = var.alb_health_check_unhealthy_threshold >= 2 && var.alb_health_check_unhealthy_threshold <= 10
+    error_message = "Health check unhealthy threshold must be between 2 and 10."
+  }
+}
+
+variable "alb_health_check_timeout" {
+  description = "Health check timeout in seconds"
+  type        = number
+  default     = 5
+  
+  validation {
+    condition     = var.alb_health_check_timeout >= 2 && var.alb_health_check_timeout <= 120
+    error_message = "Health check timeout must be between 2 and 120 seconds."
+  }
+}
+
+variable "alb_health_check_interval" {
+  description = "Health check interval in seconds"
+  type        = number
+  default     = 30
+  
+  validation {
+    condition     = var.alb_health_check_interval >= 5 && var.alb_health_check_interval <= 300
+    error_message = "Health check interval must be between 5 and 300 seconds."
+  }
+}
+
+variable "alb_listener_port" {
+  description = "Port for ALB listener"
+  type        = number
+  default     = 80
+}
+
+variable "alb_listener_protocol" {
+  description = "Protocol for ALB listener"
+  type        = string
+  default     = "HTTP"
+  
+  validation {
+    condition     = contains(["HTTP", "HTTPS"], var.alb_listener_protocol)
+    error_message = "ALB listener protocol must be HTTP or HTTPS."
+  }
+}
+
+variable "alb_bucket_force_destroy" {
+  description = "Force destroy S3 bucket for ALB logs"
+  type        = bool
+  default     = true
 }

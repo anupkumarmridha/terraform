@@ -102,3 +102,26 @@ module "bastion" {
   common_tags = local.common_tags
   depends_on = [module.vpc, module.security]
 }
+
+module "alb" {
+  source = "../../modules/alb"
+  project_name       = var.project_name
+  environment        = var.environment
+  vpc_id                  = module.vpc.vpc_id
+  public_subnet_ids       = module.vpc.public_subnet_ids
+  alb_security_group_id   = module.security.alb_security_group_id
+  common_tags             = local.common_tags
+  # Configurable ALB settings
+  enable_deletion_protection        = var.enable_alb_deletion_protection
+  enable_access_logs               = var.enable_alb_access_logs
+  target_group_port                = var.alb_target_group_port
+  target_group_protocol            = var.alb_target_group_protocol
+  health_check_path                = var.alb_health_check_path
+  health_check_healthy_threshold   = var.alb_health_check_healthy_threshold
+  health_check_unhealthy_threshold = var.alb_health_check_unhealthy_threshold
+  health_check_timeout             = var.alb_health_check_timeout
+  health_check_interval            = var.alb_health_check_interval
+  listener_port                    = var.alb_listener_port
+  listener_protocol                = var.alb_listener_protocol
+  bucket_force_destroy             = var.alb_bucket_force_destroy
+}
