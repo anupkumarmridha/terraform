@@ -5,7 +5,6 @@ locals {
     Project     = var.project_name
     Environment = var.environment
     ManagedBy   = "terraform"
-    CreatedAt   = timestamp()
   }
 
   # Environment specific configurations

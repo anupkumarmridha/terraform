@@ -86,3 +86,55 @@ variable "vpc_flow_logs_retention" {
     error_message = "VPC Flow Logs retention must be a valid CloudWatch Logs retention period."
   }
 }
+
+
+
+
+# Security Configuration Variables
+variable "allowed_ssh_cidrs" {
+  description = "CIDR blocks allowed to SSH to bastion host"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "enable_bastion_http" {
+  description = "Enable HTTP access on bastion host"
+  type        = bool
+  default     = true
+}
+
+variable "web_http_port" {
+  description = "HTTP port for web tier"
+  type        = number
+  default     = 80
+}
+
+variable "web_https_port" {
+  description = "HTTPS port for web tier"
+  type        = number
+  default     = 443
+}
+
+variable "app_port" {
+  description = "Application port"
+  type        = number
+  default     = 8080
+}
+
+variable "mysql_port" {
+  description = "MySQL port"
+  type        = number
+  default     = 3306
+}
+
+variable "postgresql_port" {
+  description = "PostgreSQL port"
+  type        = number
+  default     = 5432
+}
+
+variable "ssh_port" {
+  description = "SSH port"
+  type        = number
+  default     = 22
+}

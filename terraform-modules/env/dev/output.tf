@@ -49,3 +49,35 @@ output "vpc_cidr_calculations" {
   description = "CIDR calculation details for debugging"
   value       = module.vpc.cidr_calculations
 }
+
+
+# Security Outputs - Pass through from security module
+output "web_security_group_id" {
+  description = "ID of the web security group"
+  value       = module.security.web_security_group_id
+}
+
+output "app_security_group_id" {
+  description = "ID of the app security group"
+  value       = module.security.app_security_group_id
+}
+
+output "database_security_group_id" {
+  description = "ID of the database security group"
+  value       = module.security.database_security_group_id
+}
+
+output "bastion_security_group_id" {
+  description = "ID of the bastion security group"
+  value       = module.security.bastion_security_group_id
+}
+
+output "alb_security_group_id" {
+  description = "ID of the ALB security group"
+  value       = module.security.alb_security_group_id
+}
+
+output "all_security_group_ids" {
+  description = "Map of all security group IDs"
+  value       = module.security.all_security_group_ids
+}
