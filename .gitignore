@@ -67,3 +67,10 @@ credentials
 
 # Ignore  /backend-config directory if it exists
 /backend-config/
+
+# ignore any contnet key files
+*.pem
+*.hcl
+
+
+

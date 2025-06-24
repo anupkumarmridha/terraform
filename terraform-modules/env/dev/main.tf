@@ -75,4 +75,30 @@ module "security" {
   ssh_port            = var.ssh_port
 
   common_tags = local.common_tags
+  depends_on = [module.vpc]
+}
+
+
+module "bastion" {
+  source = "../../modules/bastion"
+
+  project_name       = var.project_name
+  environment        = var.environment
+  vpc_id             = module.vpc.vpc_id
+  public_subnet_id   = module.vpc.public_subnet_ids[0]
+  security_group_ids = [module.security.bastion_security_group_id]
+  
+  instance_type              = var.bastion_instance_type
+  key_name                  = var.bastion_key_name
+  create_key_pair           = var.create_bastion_key_pair
+  enable_eip                = var.enable_bastion_eip
+  enable_detailed_monitoring = var.bastion_enable_detailed_monitoring
+  root_volume_size          = var.bastion_root_volume_size
+  root_volume_type          = var.bastion_root_volume_type
+  enable_ipv6               = var.enable_bastion_ipv6
+  
+  user_data_script_path = "${path.module}/../../scripts/bastion-userdata.sh"
+  
+  common_tags = local.common_tags
+  depends_on = [module.vpc, module.security]
 }

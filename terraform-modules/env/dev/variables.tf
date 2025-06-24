@@ -138,3 +138,55 @@ variable "ssh_port" {
   type        = number
   default     = 22
 }
+
+
+
+# Bastion Configuration Variables
+variable "bastion_instance_type" {
+  description = "Instance type for bastion host"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "bastion_key_name" {
+  description = "SSH key pair name for bastion host"
+  type        = string
+  default     = "anup-training-bastion-key"
+}
+
+variable "create_bastion_key_pair" {
+  description = "Whether to create a new key pair for bastion"
+  type        = bool
+  default     = true
+}
+
+variable "enable_bastion_eip" {
+  description = "Enable Elastic IP for bastion instance"
+  type        = bool
+  default     = true
+}
+
+variable "bastion_enable_detailed_monitoring" {
+  description = "Enable detailed monitoring for bastion instance"
+  type        = bool
+  default     = false
+}
+
+variable "bastion_root_volume_size" {
+  description = "Size of the bastion root volume in GB"
+  type        = number
+  default     = 8
+}
+
+variable "bastion_root_volume_type" {
+  description = "Type of the bastion root volume"
+  type        = string
+  default     = "gp3"
+}
+
+variable "enable_bastion_ipv6" {
+  description = "Enable IPv6 support for bastion instance"
+  type        = bool
+  default     = false
+  
+}

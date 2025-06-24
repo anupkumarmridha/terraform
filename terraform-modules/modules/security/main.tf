@@ -1,14 +1,17 @@
 # Default security group for VPC
 resource "aws_default_security_group" "default" {
   vpc_id = var.vpc_id
-
-  # Remove all default rules
-  ingress = []
-  egress  = []
-
   tags = merge(var.common_tags, {
     Name = "${local.name_prefix}-default-sg"
   })
+}
+
+# Default security group outbound rules
+resource "aws_vpc_security_group_egress_rule" "default_allow_all" {
+    security_group_id = aws_default_security_group.default.id
+    cidr_ipv4         = "0.0.0.0/0"
+    ip_protocol       = "-1"
+    description       = "Allow all inbound traffic to default security group"
 }
 
 # Web tier security group

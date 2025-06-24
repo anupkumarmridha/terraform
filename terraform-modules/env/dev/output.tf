@@ -81,3 +81,38 @@ output "all_security_group_ids" {
   description = "Map of all security group IDs"
   value       = module.security.all_security_group_ids
 }
+
+
+# Bastion Outputs
+output "bastion_instance_id" {
+  description = "ID of the bastion instance"
+  value       = module.bastion.bastion_instance_id
+}
+
+output "bastion_public_ip" {
+  description = "Public IP of the bastion instance"
+  value       = module.bastion.bastion_public_ip
+}
+
+output "bastion_private_ip" {
+  description = "Private IP of the bastion instance"
+  value       = module.bastion.bastion_private_ip
+}
+
+output "bastion_ssh_command" {
+  description = "SSH command to connect to bastion"
+  value       = module.bastion.ssh_connection_command
+  sensitive   = true
+}
+
+output "bastion_key_pair_name" {
+  description = "Name of the key pair used by bastion"
+  value       = module.bastion.key_pair_name
+}
+
+output "bastion_private_key_path" {
+  description = "Path to the private key file for bastion"
+  value       = module.bastion.private_key_path
+  sensitive   = true
+}
+
