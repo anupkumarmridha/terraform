@@ -68,3 +68,24 @@ output "bastion_subnet_id" {
   description = "Subnet ID where bastion is deployed"
   value       = aws_instance.bastion.subnet_id
 }
+
+
+output "bastion_iam_role_arn" {
+  description = "ARN of the bastion IAM role"
+  value       = aws_iam_role.bastion_role.arn
+}
+
+output "bastion_iam_role_name" {
+  description = "Name of the bastion IAM role"
+  value       = aws_iam_role.bastion_role.name
+}
+
+output "bastion_instance_profile_arn" {
+  description = "ARN of the bastion instance profile"
+  value       = aws_iam_instance_profile.bastion_profile.arn
+}
+
+output "bastion_instance_profile_name" {
+  description = "Name of the bastion instance profile"
+  value       = aws_iam_instance_profile.bastion_profile.name
+}

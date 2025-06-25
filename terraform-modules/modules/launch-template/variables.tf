@@ -45,7 +45,7 @@ variable "create_key_pair" {
 variable "ami_id" {
   description = "AMI ID for instances (optional, will use latest AL2023 if not provided)"
   type        = string
-  default     = ""
+  default     = "ami-0b8fd19ea8939ea0d"
 }
 
 variable "root_volume_size" {

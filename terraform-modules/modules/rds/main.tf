@@ -199,6 +199,11 @@ resource "aws_db_instance" "replica" {
   replicate_source_db = aws_db_instance.main.identifier
   instance_class      = var.db_replica_instance_class
 
+
+ # Storage configuration - should match primary
+  storage_encrypted = true
+  kms_key_id        = aws_kms_key.rds.arn
+
   # Network configuration
   publicly_accessible    = false
   vpc_security_group_ids = [var.security_group_id]

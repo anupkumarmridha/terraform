@@ -30,12 +30,6 @@ variable "additional_region_short_names" {
   default     = {}
 }
 
-variable "enable_mysql_connection_provisioner" {
-  description = "Enable MySQL connection provisioner"
-  type        = bool
-  default     = false
-}
-
 variable "project_name" {
   description = "Name of the project for resource naming"
   type        = string
@@ -905,8 +899,12 @@ variable "db_cloudwatch_logs_retention_in_days" {
   description = "CloudWatch logs retention period in days"
   type        = number
   default     = 7
+}
 
 
-
-
+# MySQL Connection Provisioner Configuration
+variable "enable_mysql_connection_provisioner" {
+  description = "Enable MySQL connection provisioner"
+  type        = bool
+  default     = true
 }

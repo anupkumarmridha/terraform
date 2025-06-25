@@ -73,9 +73,80 @@ resource "aws_eip" "bastion" {
   })
 }
 
+# IAM role for bastion host
+resource "aws_iam_role" "bastion_role" {
+  name = "${local.name_prefix}-bastion-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = merge(var.common_tags, {
+    Name = "${local.name_prefix}-bastion-role"
+  })
+}
+
+# IAM policy for bastion host
+resource "aws_iam_role_policy" "bastion_policy" {
+  name = "${local.name_prefix}-bastion-policy"
+  role = aws_iam_role.bastion_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "autoscaling:DescribeAutoScalingGroups",
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceStatus",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams",
+          "logs:DescribeLogGroups",
+          "cloudwatch:PutMetricData"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Attach AWS managed policies
+resource "aws_iam_role_policy_attachment" "bastion_ssm" {
+  role       = aws_iam_role.bastion_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+resource "aws_iam_role_policy_attachment" "bastion_cloudwatch" {
+  role       = aws_iam_role.bastion_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}
+
+# Instance profile for bastion
+resource "aws_iam_instance_profile" "bastion_profile" {
+  name = "${local.name_prefix}-bastion-profile"
+  role = aws_iam_role.bastion_role.name
+
+  tags = merge(var.common_tags, {
+    Name = "${local.name_prefix}-bastion-profile"
+  })
+}
+
+
 # Bastion EC2 instance
 resource "aws_instance" "bastion" {
-  ami                         = data.aws_ami.al2023.id
+   ami                         = data.aws_ami.al2023.id
   instance_type               = var.instance_type
   subnet_id                   = var.public_subnet_id
   associate_public_ip_address = !var.enable_eip
@@ -83,6 +154,8 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids      = var.security_group_ids
   monitoring                  = var.enable_detailed_monitoring
   ipv6_address_count          = var.enable_ipv6 ? 1 : 0
+  iam_instance_profile        = aws_iam_instance_profile.bastion_profile.name
+
 
   root_block_device {
     volume_type           = var.root_volume_type

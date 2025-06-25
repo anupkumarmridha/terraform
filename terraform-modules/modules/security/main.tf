@@ -167,7 +167,7 @@ resource "aws_security_group" "bastion" {
 
 # Bastion security group rules
 resource "aws_vpc_security_group_ingress_rule" "bastion_ssh" {
-  for_each = toset(var.allowed_ssh_cidrs)
+  for_each = toset(local.all_allowed_ssh_cidrs)
 
   security_group_id = aws_security_group.bastion.id
   cidr_ipv4         = each.value
