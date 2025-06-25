@@ -55,7 +55,7 @@ module "vpc" {
 }
 
 
-
+# Security Module
 module "security" {
   source = "../../modules/security"
 
@@ -78,7 +78,7 @@ module "security" {
   depends_on = [module.vpc]
 }
 
-
+# Bastion Host Module
 module "bastion" {
   source = "../../modules/bastion"
 
@@ -103,6 +103,7 @@ module "bastion" {
   depends_on = [module.vpc, module.security]
 }
 
+# ALB Module
 module "alb" {
   source = "../../modules/alb"
   project_name       = var.project_name
@@ -124,4 +125,102 @@ module "alb" {
   listener_port                    = var.alb_listener_port
   listener_protocol                = var.alb_listener_protocol
   bucket_force_destroy             = var.alb_bucket_force_destroy
+}
+
+
+# Launch Template Module
+module "app_launch_template" {
+  source = "../../modules/launch-template"
+
+  project_name       = var.project_name
+  environment        = var.environment
+  vpc_id             = module.vpc.vpc_id
+  security_group_ids = [module.security.app_security_group_id]
+
+  # Instance Configuration
+  instance_type    = var.app_instance_type
+  key_name        = var.app_key_name
+  create_key_pair = var.create_app_key_pair
+  root_volume_size = var.app_root_volume_size
+  root_volume_type = var.app_root_volume_type
+
+  # User data script
+  user_data_script_path = "${path.module}/../../scripts/app-userdata.sh"
+
+  common_tags = local.common_tags
+  depends_on = [module.vpc, module.security]
+}
+
+module "app_asg" {
+  source = "../../modules/asg"
+
+  project_name       = var.project_name
+  environment        = var.environment
+  vpc_id             = module.vpc.vpc_id
+  subnet_ids         = module.vpc.private_subnet_ids
+  target_group_arns  = [module.alb.target_group_arn]
+
+  # Launch Template Configuration
+  launch_template_id      = module.app_launch_template.launch_template_id
+  launch_template_version = "$Latest"
+
+  # ASG Configuration
+  min_size         = var.asg_min_size
+  max_size         = var.asg_max_size
+  desired_capacity = var.asg_desired_capacity
+
+  # Auto Scaling Configuration
+  enable_scaling_policies = var.enable_asg_scaling_policies
+  scaling_policies        = var.scaling_policies
+
+  common_tags = local.common_tags
+  depends_on = [module.vpc, module.security, module.alb, module.app_launch_template]
+}
+
+# RDS Module
+module "rds" {
+  source = "../../modules/rds"
+
+  project_name       = var.project_name
+  environment        = var.environment
+  vpc_id             = module.vpc.vpc_id
+  database_subnet_ids = module.vpc.database_subnet_ids
+  security_group_id  = module.security.database_security_group_id
+
+  # Database configuration
+  db_name                = var.db_name
+  db_username            = var.db_username
+  db_instance_class      = var.db_instance_class
+  db_allocated_storage   = var.db_allocated_storage
+  db_max_allocated_storage = var.db_max_allocated_storage
+  db_backup_retention_period = var.db_backup_retention_period
+  multi_az              = var.multi_az
+  db_storage_type       = var.db_storage_type
+  db_deletion_protection = var.db_deletion_protection
+  db_final_snapshot     = var.db_final_snapshot
+  
+  # Read replica configuration
+  create_read_replica   = var.create_read_replica
+  db_replica_count      = var.db_replica_count
+  db_replica_instance_class = var.db_replica_instance_class
+  
+  # Engine configuration
+  engine               = var.db_engine
+  engine_version       = var.db_engine_version
+  port                 = var.db_port
+  parameter_group_family = var.db_parameter_group_family
+  
+  # Backup and maintenance configuration
+  backup_window        = var.db_backup_window
+  maintenance_window   = var.db_maintenance_window
+  
+  # Monitoring configuration
+  monitoring_interval  = var.db_monitoring_interval
+  performance_insights_enabled = var.db_performance_insights_enabled
+  performance_insights_retention_period = var.db_performance_insights_retention_period
+  enabled_cloudwatch_logs_exports = var.db_enabled_cloudwatch_logs_exports
+  cloudwatch_logs_retention_in_days = var.db_cloudwatch_logs_retention_in_days
+  
+  common_tags = local.common_tags
+  depends_on = [module.vpc, module.security]
 }

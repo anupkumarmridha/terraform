@@ -139,3 +139,99 @@ output "target_group_arn" {
 }
 
 
+
+# Launch Template Outputs
+output "app_launch_template_id" {
+  description = "ID of the application launch template"
+  value       = module.app_launch_template.launch_template_id
+}
+
+output "app_launch_template_arn" {
+  description = "ARN of the application launch template"
+  value       = module.app_launch_template.launch_template_arn
+}
+
+output "app_launch_template_latest_version" {
+  description = "Latest version of the application launch template"
+  value       = module.app_launch_template.launch_template_latest_version
+}
+
+output "app_iam_role_arn" {
+  description = "ARN of the application IAM role"
+  value       = module.app_launch_template.iam_role_arn
+}
+
+output "app_log_group_name" {
+  description = "Name of the application log group"
+  value       = module.app_launch_template.app_log_group_name
+}
+
+# ASG Outputs
+output "app_autoscaling_group_id" {
+  description = "ID of the application Auto Scaling Group"
+  value       = module.app_asg.autoscaling_group_id
+}
+
+output "app_autoscaling_group_name" {
+  description = "Name of the application Auto Scaling Group"
+  value       = module.app_asg.autoscaling_group_name
+}
+
+output "app_autoscaling_group_arn" {
+  description = "ARN of the application Auto Scaling Group"
+  value       = module.app_asg.autoscaling_group_arn
+}
+
+output "app_scaling_policy_arns" {
+  description = "Map of scaling policy names to their ARNs"
+  value       = module.app_asg.scaling_policy_arns
+}
+
+output "app_cloudwatch_alarm_arns" {
+  description = "Map of CloudWatch alarm names to their ARNs"
+  value       = module.app_asg.cloudwatch_alarm_arns
+}
+
+# RDS Outputs
+output "rds_endpoint" {
+  description = "RDS instance endpoint"
+  value       = module.rds.rds_endpoint
+  sensitive   = true
+}
+
+output "rds_port" {
+  description = "RDS instance port"
+  value       = module.rds.rds_port
+}
+
+output "rds_database_name" {
+  description = "RDS database name"
+  value       = module.rds.rds_database_name
+}
+
+output "rds_username" {
+  description = "RDS master username"
+  value       = module.rds.rds_username
+  sensitive   = true
+}
+
+output "db_credentials_secret_arn" {
+  description = "ARN of the secret containing database credentials"
+  value       = module.rds.db_credentials_secret_arn
+}
+
+output "rds_instance_id" {
+  description = "ID of the RDS instance"
+  value       = module.rds.rds_instance_id
+}
+
+output "rds_instance_arn" {
+  description = "ARN of the RDS instance"
+  value       = module.rds.rds_instance_arn
+}
+
+output "rds_replica_endpoints" {
+  description = "List of RDS read replica endpoints"
+  value       = module.rds.rds_replica_endpoints
+  sensitive   = true
+}
