@@ -238,17 +238,17 @@ output "rds_replica_endpoints" {
 
 
 # MySQL Provisioner Outputs
-# output "mysql_connection_deployment_status" {
-#   description = "Status of MySQL connection deployment"
-#   value       = var.enable_mysql_connection_provisioner ? module.mysql_provisioner[0].deployment_status : "Provisioner disabled"
-# }
+output "mysql_connection_deployment_status" {
+  description = "Status of MySQL connection deployment"
+  value       = var.enable_mysql_connection_provisioner ? module.mysql_provisioner[0].deployment_status : "Provisioner disabled"
+}
 
-# output "mysql_connection_test_url" {
-#   description = "URL to test MySQL connection"
-#   value       = "http://${module.alb.alb_dns_name}/mysql-connection.php"
-# }
+output "mysql_connection_test_url" {
+  description = "URL to test MySQL connection"
+  value       = "http://${module.alb.alb_dns_name}/mysql-connection.php"
+}
 
-# output "apache_server_dashboard_url" {
-#   description = "URL to access server dashboard"
-#   value       = "http://${module.alb.alb_dns_name}/"
-# }
+output "apache_server_dashboard_url" {
+  description = "URL to access server dashboard"
+  value       = "http://${module.alb.alb_dns_name}/"
+}

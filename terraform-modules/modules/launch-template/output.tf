@@ -76,3 +76,8 @@ output "key_name" {
   description = "SSH key pair name configured in the launch template"
   value       = var.key_name
 }
+
+output "private_key_path" {
+  description = "Path to the private key file for the instances"
+  value       = var.create_key_pair ? "${path.module}/keys/${var.key_name}.pem" : ""
+}

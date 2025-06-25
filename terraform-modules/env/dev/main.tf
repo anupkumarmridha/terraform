@@ -227,36 +227,39 @@ module "rds" {
 
 
 
-# module "mysql_provisioner" {
-#   source = "../../modules/provisioner"
+module "mysql_provisioner" {
+  source = "../../modules/provisioner"
   
-#   count = var.enable_mysql_connection_provisioner ? 1 : 0
+  count = var.enable_mysql_connection_provisioner ? 1 : 0
 
-#   # Database connection details
-#   db_credentials_secret_arn = module.rds.db_credentials_secret_arn
-#   rds_endpoint             = module.rds.rds_endpoint
-#   rds_port                 = module.rds.rds_port
-#   db_name                  = var.db_name
+  # Database connection details
+  db_credentials_secret_arn = module.rds.db_credentials_secret_arn
+  rds_endpoint             = module.rds.rds_endpoint
+  rds_port                 = module.rds.rds_port
+  db_name                  = var.db_name
 
-#   # Bastion host details for remote provisioning
-#   bastion_public_ip        = module.bastion.bastion_public_ip
-#   bastion_private_key_path = module.bastion.private_key_path
-
-#   # ASG details
-#   asg_name                    = module.app_asg.autoscaling_group_name
-#   launch_template_latest_version = module.app_launch_template.launch_template_latest_version
-#   asg_dependency              = module.app_asg
-
-#   # Provisioner configuration
-#   enable_provisioner       = true
-#   enable_local_provisioner = false
-
-#   common_tags = local.common_tags
+  # Bastion host details for remote provisioning
+  bastion_public_ip        = module.bastion.bastion_public_ip
+  bastion_private_key_path = module.bastion.private_key_path
   
-#   depends_on = [
-#     module.rds,
-#     module.bastion,
-#     module.app_asg,
-#     module.app_launch_template
-#   ]
-# }
+  # App instance details
+  app_private_key_path     = module.app_launch_template.private_key_path
+
+  # ASG details
+  asg_name                    = module.app_asg.autoscaling_group_name
+  launch_template_latest_version = module.app_launch_template.launch_template_latest_version
+  asg_dependency              = module.app_asg
+
+  # Provisioner configuration
+  enable_provisioner       = true
+  enable_local_provisioner = false
+
+  common_tags = local.common_tags
+  
+  depends_on = [
+    module.rds,
+    module.bastion,
+    module.app_asg,
+    module.app_launch_template
+  ]
+}

@@ -29,6 +29,21 @@ resource "null_resource" "mysql_connection_provisioner" {
     destination = "/tmp/mysql-connection.php"
   }
 
+  # Create a file with app key path information
+  provisioner "remote-exec" {
+    inline = [
+      "echo '${var.app_private_key_path != "" ? "APP_KEY_PROVIDED=true" : "APP_KEY_PROVIDED=false"}' > /tmp/app_key_info.env"
+    ]
+  }
+
+  # Upload the app private key to bastion if provided
+  provisioner "file" {
+    source      = var.app_private_key_path
+    destination = "/tmp/${basename(var.app_private_key_path)}"
+    when        = create
+    on_failure  = continue
+  }
+
   # Upload the database configuration script
   provisioner "file" {
     content = templatefile("${path.module}/scripts/setup-mysql-connection.sh", {
@@ -38,6 +53,7 @@ resource "null_resource" "mysql_connection_provisioner" {
       db_name = var.db_name
       db_port = var.rds_port
       asg_name = var.asg_name
+      app_key_path = var.app_private_key_path != "" ? "/tmp/${basename(var.app_private_key_path)}" : ""
     })
     destination = "/tmp/setup-mysql-connection.sh"
   }

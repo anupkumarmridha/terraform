@@ -40,6 +40,12 @@ variable "bastion_private_key_path" {
   type        = string
 }
 
+variable "app_private_key_path" {
+  description = "Path to application instance private key"
+  type        = string
+  default     = ""
+}
+
 variable "asg_name" {
   description = "Auto Scaling Group name"
   type        = string
