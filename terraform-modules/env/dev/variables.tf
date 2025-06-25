@@ -4,6 +4,38 @@ variable "aws_region" {
   default     = "us-east-1"
 }
 
+# Add these missing variables at the end of the file
+
+variable "aws_region_short" {
+  description = "Short form of AWS region for naming"
+  type        = string
+  default     = "use1"
+}
+
+variable "multi_region_setup" {
+  description = "Enable multi-region setup"
+  type        = bool
+  default     = false
+}
+
+variable "additional_regions" {
+  description = "List of additional regions for multi-region setup"
+  type        = list(string)
+  default     = []
+}
+
+variable "additional_region_short_names" {
+  description = "Map of region names to their short forms"
+  type        = map(string)
+  default     = {}
+}
+
+variable "enable_mysql_connection_provisioner" {
+  description = "Enable MySQL connection provisioner"
+  type        = bool
+  default     = false
+}
+
 variable "project_name" {
   description = "Name of the project for resource naming"
   type        = string
@@ -873,4 +905,8 @@ variable "db_cloudwatch_logs_retention_in_days" {
   description = "CloudWatch logs retention period in days"
   type        = number
   default     = 7
+
+
+
+
 }

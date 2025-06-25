@@ -43,11 +43,19 @@ resource "random_password" "db_password" {
 resource "aws_secretsmanager_secret" "db_credentials" {
   name                    = "${local.name_prefix}-db-credentials"
   description             = "RDS MySQL credentials"
-  recovery_window_in_days = 7
+  recovery_window_in_days = 0 # No recovery window for immediate deletion
+  
+  # Force overwrite if the secret is scheduled for deletion
+  force_overwrite_replica_secret = true
 
   tags = merge(local.common_tags, {
     Name = "${local.name_prefix}-db-credentials"
   })
+
+    
+  lifecycle {
+    ignore_changes = [recovery_window_in_days]
+  }
 }
 
 resource "aws_secretsmanager_secret_version" "db_credentials" {
