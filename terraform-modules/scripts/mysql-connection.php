@@ -1,5 +1,4 @@
 <?php
-<?php
 // Read environment variables from .env file
 if (file_exists(__DIR__ . '/.env')) {
     $lines = file(__DIR__ . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
@@ -39,7 +38,7 @@ if ($conn->connect_error) {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>MySQL Database Connection Test</title>
     <meta charset="UTF-8">

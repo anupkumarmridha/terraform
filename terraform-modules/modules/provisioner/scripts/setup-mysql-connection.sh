@@ -9,12 +9,15 @@ DB_NAME="${db_name}"
 DB_PORT="${db_port}"
 ASG_NAME="${asg_name}"
 APP_KEY_PATH="${app_key_path}"
+ALB_DNS="${alb_dns_name}"
 
 # Global variables
 REGION=""
 BASTION_IP=""
 SUCCESS_COUNT=0
 TOTAL_COUNT=0
+
+
 
 # Function: Print colored output
 print_status() {
@@ -105,17 +108,16 @@ get_asg_instances() {
     for attempt in {1..5}; do
         print_status "INFO" "Attempt $attempt to find instances in ASG..."
         
-        # Use --output=json and jq to ensure we get clean instance IDs
-        local instance_ids_json=$(aws autoscaling describe-auto-scaling-groups \
+        # Use --output=text to get clean instance IDs
+        local instance_ids=$(aws autoscaling describe-auto-scaling-groups \
             --auto-scaling-group-names "$asg_name" \
             --query 'AutoScalingGroups[0].Instances[?LifecycleState==`InService`].InstanceId' \
-            --output json 2>/dev/null || echo "[]")
+            --output text 2>/dev/null || echo "")
         
         # Check if we got any instances
-        if [ "$instance_ids_json" != "[]" ] && [ "$instance_ids_json" != "" ]; then
-            # Hard-code a specific instance ID for testing
+        if [ -n "$instance_ids" ]; then
             print_status "SUCCESS" "Found instances in ASG"
-            echo "i-05000ea4e54072edc"
+            echo "$instance_ids"
             return 0
         fi
         
@@ -199,22 +201,36 @@ test_ssh_connectivity() {
     
     print_status "DEBUG" "Testing SSH connectivity to $private_ip..."
     
+    # Detect if we are already on the bastion
+    local on_bastion=true
+    if [ -n "$BASTION_IP" ] && [ "$BASTION_IP" != "$(hostname -I | awk '{print $1}')" ]; then
+        on_bastion=false
+    fi
+    
     # Try multiple times with increasing timeouts
     for attempt in {1..3}; do
         print_status "INFO" "SSH connection attempt $attempt to $private_ip..."
         
-        local ssh_cmd="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes"
-        
-        # Add identity file if app key is provided
+        local ssh_cmd=""
         if [ -n "$APP_KEY_PATH" ] && [ -f "$APP_KEY_PATH" ]; then
-            # Use double quotes around the key path, just like the manual command
-            ssh_cmd="$ssh_cmd -i \"$APP_KEY_PATH\""
+            if [ "$on_bastion" = true ]; then
+                ssh_cmd="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes -i \"$APP_KEY_PATH\" ec2-user@$private_ip \"echo 'Connection successful'\""
+            else
+                ssh_cmd="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes -i \"$APP_KEY_PATH\" -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %h:%p ec2-user@$BASTION_IP\" ec2-user@$private_ip \"echo 'Connection successful'\""
+            fi
+        else
+            if [ "$on_bastion" = true ]; then
+                ssh_cmd="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes ec2-user@$private_ip \"echo 'Connection successful'\""
+            else
+                ssh_cmd="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %h:%p ec2-user@$BASTION_IP\" ec2-user@$private_ip \"echo 'Connection successful'\""
+            fi
         fi
         
-        if timeout $((15 * attempt)) $ssh_cmd \
-            -o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p ec2-user@$BASTION_IP" \
-            ec2-user@$private_ip "echo 'Connection successful'" 2>/dev/null; then
-            
+        # Print the SSH command for debugging
+        print_status "DEBUG" "SSH command: $ssh_cmd"
+        
+        # Actually run the command
+        if eval $ssh_cmd 2>/dev/null; then
             print_status "SUCCESS" "SSH connection successful to $private_ip on attempt $attempt"
             return 0
         fi
@@ -243,22 +259,34 @@ copy_files_to_instance() {
     
     print_status "INFO" "Copying mysql-connection.php to $private_ip..."
     
+    # Detect if we are already on the bastion
+    local on_bastion=true
+    if [ -n "$BASTION_IP" ] && [ "$BASTION_IP" != "$(hostname -I | awk '{print $1}')" ]; then
+        on_bastion=false
+    fi
+    
     # Try multiple times with increasing timeouts
     for attempt in {1..3}; do
         print_status "INFO" "File copy attempt $attempt to $private_ip..."
         
-        local scp_cmd="scp -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes"
-        
-        # Add identity file if app key is provided
+        local scp_cmd=""
         if [ -n "$APP_KEY_PATH" ] && [ -f "$APP_KEY_PATH" ]; then
-            # Use double quotes around the key path, just like the manual command
-            scp_cmd="$scp_cmd -i \"$APP_KEY_PATH\""
+            if [ "$on_bastion" = true ]; then
+                scp_cmd="scp -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes -i \"$APP_KEY_PATH\" /tmp/mysql-connection.php ec2-user@$private_ip:/tmp/"
+            else
+                scp_cmd="scp -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes -i \"$APP_KEY_PATH\" -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %h:%p ec2-user@$BASTION_IP\" /tmp/mysql-connection.php ec2-user@$private_ip:/tmp/"
+            fi
+        else
+            if [ "$on_bastion" = true ]; then
+                scp_cmd="scp -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes /tmp/mysql-connection.php ec2-user@$private_ip:/tmp/"
+            else
+                scp_cmd="scp -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes -o ProxyCommand=\"ssh -o StrictHostKeyChecking=no -W %h:%p ec2-user@$BASTION_IP\" /tmp/mysql-connection.php ec2-user@$private_ip:/tmp/"
+            fi
         fi
         
-        if timeout $((15 * attempt)) $scp_cmd \
-            -o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p ec2-user@$BASTION_IP" \
-            /tmp/mysql-connection.php ec2-user@$private_ip:/tmp/ 2>/dev/null; then
-            
+        print_status "DEBUG" "SCP command: $scp_cmd"
+        
+        if eval $scp_cmd 2>/dev/null; then
             print_status "SUCCESS" "Files copied successfully to $private_ip on attempt $attempt"
             return 0
         fi
@@ -276,214 +304,9 @@ copy_files_to_instance() {
     return 1
 }
 
-# Function: Setup instance
-setup_instance() {
-    local private_ip="$1"
-    local instance_id="$2"
-    
-    print_status "INFO" "Executing setup commands on $private_ip..."
-    
-    # Try multiple times with increasing timeouts
-    for attempt in {1..3}; do
-        print_status "INFO" "Setup attempt $attempt on $private_ip..."
-        
-        local ssh_cmd="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=$((10 * attempt)) -o BatchMode=yes"
-        
-        # Add identity file if app key is provided
-        if [ -n "$APP_KEY_PATH" ] && [ -f "$APP_KEY_PATH" ]; then
-            # Use double quotes around the key path, just like the manual command
-            ssh_cmd="$ssh_cmd -i \"$APP_KEY_PATH\""
-        fi
-        
-        if timeout $((60 * attempt)) $ssh_cmd \
-            -o ProxyCommand="ssh -o StrictHostKeyChecking=no -W %h:%p ec2-user@$BASTION_IP" \
-            ec2-user@$private_ip << EOF
-        # Import functions (simplified for remote execution)
-        print_remote_status() {
-            local status="\$1"
-            local message="\$2"
-            case \$status in
-                "INFO") echo "ℹ️  \$message" ;;
-                "SUCCESS") echo "✅ \$message" ;;
-                "WARNING") echo "⚠️  \$message" ;;
-                "ERROR") echo "❌ \$message" ;;
-                "DEBUG") echo "🔍 \$message" ;;
-                *) echo "\$message" ;;
-            esac
-        }
-        
-        print_remote_status "INFO" "Starting instance setup..."
-        set -e
-        
-        # Install packages
-        print_remote_status "INFO" "Installing packages..."
-        sudo yum update -y >/dev/null 2>&1
-        sudo yum install -y httpd php php-mysqli mysql >/dev/null 2>&1
-        print_remote_status "SUCCESS" "Packages installed"
-        
-        # Start Apache
-        print_remote_status "INFO" "Starting Apache..."
-        sudo systemctl start httpd
-        sudo systemctl enable httpd >/dev/null 2>&1
-        print_remote_status "SUCCESS" "Apache started"
-        
-        # Setup web directory
-        sudo mkdir -p /var/www/html
-        
-        # Setup PHP file
-        print_remote_status "INFO" "Setting up web files..."
-        if [ -f /tmp/mysql-connection.php ]; then
-            sudo cp /tmp/mysql-connection.php /var/www/html/
-            sudo chown apache:apache /var/www/html/mysql-connection.php
-            sudo chmod 644 /var/www/html/mysql-connection.php
-            print_remote_status "SUCCESS" "MySQL connection PHP file deployed"
-        else
-            print_remote_status "WARNING" "mysql-connection.php not found in /tmp/"
-        fi
-        
-        # Create environment file
-        print_remote_status "INFO" "Creating environment configuration..."
-        sudo tee /var/www/html/.env << EOL
-DB_HOST=$DB_HOST
-DB_USER=$DB_USER
-DB_PASS=$DB_PASS
-DB_NAME=$DB_NAME
-DB_PORT=$DB_PORT
-EOL
-        
-        # Create dashboard
-        print_remote_status "INFO" "Creating service dashboard..."
-        sudo tee /var/www/html/index.html << 'EOHTML'
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Application Services Dashboard</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .service { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 5px; }
-        .docker { background-color: #e3f2fd; border-left: 4px solid #2196f3; }
-        .mysql { background-color: #f3e5f5; border-left: 4px solid #9c27b0; }
-        .status { font-weight: bold; margin: 10px 0; }
-        .links a { display: inline-block; margin: 5px 10px 5px 0; padding: 8px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }
-        .links a:hover { background-color: #0056b3; }
-        .refresh-btn { position: fixed; bottom: 20px; right: 20px; background-color: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 50px; cursor: pointer; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🚀 Application Services Dashboard</h1>
-        <p>Multi-service application running on AWS</p>
-        
-        <div class="service docker">
-            <h2>🐳 Docker Application</h2>
-            <p><strong>Technology:</strong> Node.js Container</p>
-            <p><strong>Port:</strong> 8080</p>
-            <p><strong>Status:</strong> <span id="docker-status">Checking...</span></p>
-            <div class="links">
-                <a href="http://localhost:8080" target="_blank">Access Docker App</a>
-                <a href="http://localhost:8080/health" target="_blank">Health Check</a>
-            </div>
-        </div>
-        
-        <div class="service mysql">
-            <h2>🐬 MySQL Connection Test</h2>
-            <p><strong>Technology:</strong> PHP/Apache</p>
-            <p><strong>Port:</strong> 80</p>
-            <p><strong>Status:</strong> <span style="color: green;">✅ Active</span></p>
-            <div class="links">
-                <a href="/mysql-connection.php" target="_blank">Test MySQL Connection</a>
-            </div>
-        </div>
-        
-        <div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px;">
-            <h3>📊 Quick Stats</h3>
-            <p><strong>Instance ID:</strong> <span id="instance-id">Loading...</span></p>
-            <p><strong>Local Time:</strong> <span id="current-time">Loading...</span></p>
-        </div>
-    </div>
-    
-    <button class="refresh-btn" onclick="location.reload()">🔄</button>
-    
-    <script>
-        // Check Docker service status
-        fetch('http://localhost:8080/health')
-            .then(response => response.ok ? 
-                document.getElementById('docker-status').innerHTML = '<span style="color: green;">✅ Running</span>' :
-                document.getElementById('docker-status').innerHTML = '<span style="color: orange;">⚠️ Issues</span>'
-            )
-            .catch(() => document.getElementById('docker-status').innerHTML = '<span style="color: red;">❌ Not Running</span>');
-        
-        // Load instance metadata
-        fetch('http://169.254.169.254/latest/meta-data/instance-id')
-            .then(response => response.text())
-            .then(data => document.getElementById('instance-id').textContent = data)
-            .catch(() => document.getElementById('instance-id').textContent = 'Unknown');
-        
-        // Set current time
-        document.getElementById('current-time').textContent = new Date().toLocaleString();
-    </script>
-</body>
-</html>
-EOHTML
-        
-        # Set permissions
-        print_remote_status "INFO" "Setting file permissions..."
-        sudo chown -R apache:apache /var/www/html/
-        sudo chmod 644 /var/www/html/*.php /var/www/html/*.html 2>/dev/null || true
-        sudo chmod 600 /var/www/html/.env
-        
-        # Test database connection
-        print_remote_status "DEBUG" "Testing database connection..."
-        if command -v mysql &> /dev/null; then
-            if mysql -h$DB_HOST -u$DB_USER -p$DB_PASS -P$DB_PORT $DB_NAME -e "SELECT 1;" >/dev/null 2>&1; then
-                print_remote_status "SUCCESS" "Database connection successful"
-            else
-                print_remote_status "ERROR" "Database connection failed"
-            fi
-        fi
-        
-        # Restart Apache
-        print_remote_status "INFO" "Restarting Apache..."
-        sudo systemctl restart httpd
-        
-        # Verify services
-        print_remote_status "DEBUG" "Verifying services..."
-        if sudo systemctl is-active httpd >/dev/null 2>&1; then
-            print_remote_status "SUCCESS" "Apache is running"
-        else
-            print_remote_status "ERROR" "Apache failed to start"
-            exit 1
-        fi
-        
-        # Check Docker status
-        if docker ps | grep -q test-asg-server 2>/dev/null; then
-            print_remote_status "SUCCESS" "Docker container is running"
-        else
-            print_remote_status "INFO" "Docker container not found (normal if not yet deployed)"
-        fi
-        
-        print_remote_status "SUCCESS" "Instance setup completed successfully!"
-EOF
-        then
-            print_status "SUCCESS" "Instance setup completed successfully on attempt $attempt"
-            return 0
-        fi
-        
-        print_status "WARNING" "Setup attempt $attempt failed"
-        
-        if [ $attempt -lt 3 ]; then
-            local wait_time=$((15 * attempt))
-            print_status "INFO" "Waiting $wait_time seconds before next attempt..."
-            sleep $wait_time
-        fi
-    done
-    
-    print_status "ERROR" "Failed to setup instance $instance_id after multiple attempts"
-    return 1
-}
+# Make the setup_instance script executable and source it
+chmod +x /tmp/setup_instance.sh
+source /tmp/setup_instance.sh
 
 # Function: Process single instance
 process_instance() {
@@ -517,8 +340,10 @@ process_instance() {
         return 1
     fi
     
-    # Setup instance
-    if ! setup_instance "$private_ip" "$instance_id"; then
+    # No need to copy dashboard HTML file as it's created directly in setup_instance.sh
+    
+    # Setup instance with all required parameters
+    if ! setup_instance "$private_ip" "$instance_id" "$DB_HOST" "$DB_USER" "$DB_PASS" "$DB_NAME" "$DB_PORT" "$APP_KEY_PATH" "$BASTION_IP"; then
         print_status "ERROR" "Failed to setup instance $instance_id"
         return 1
     fi
@@ -546,9 +371,9 @@ print_summary() {
         echo "3. Server status dashboard at http://<alb-dns>/"
         echo ""
         print_status "INFO" "Access URLs:"
-        echo "- Main Dashboard: http://<your-alb-dns>/"
-        echo "- MySQL Test: http://<your-alb-dns>/mysql-connection.php"
-        echo "- Docker App: http://<your-alb-dns>:8080"
+        echo "- Main Dashboard: http://$ALB_DNS/"
+        echo "- MySQL Test: http://$ALB_DNS/mysql-connection.php"
+        echo "- Docker App: http://$ALB_DNS:8080"
         return 0
     else
         print_status "ERROR" "No instances were successfully configured"

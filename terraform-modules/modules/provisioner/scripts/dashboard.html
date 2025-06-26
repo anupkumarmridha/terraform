@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Application Services Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .service { border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 5px; }
+        .docker { background-color: #e3f2fd; border-left: 4px solid #2196f3; }
+        .mysql { background-color: #f3e5f5; border-left: 4px solid #9c27b0; }
+        .status { font-weight: bold; margin: 10px 0; }
+        .links a { display: inline-block; margin: 5px 10px 5px 0; padding: 8px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+        .links a:hover { background-color: #0056b3; }
+        .refresh-btn { position: fixed; bottom: 20px; right: 20px; background-color: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 50px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Application Services Dashboard</h1>
+        <p>Multi-service application running on AWS</p>
+        
+        <div class="service docker">
+            <h2>🐳 Docker Application</h2>
+            <p><strong>Technology:</strong> Node.js Container</p>
+            <p><strong>Port:</strong> 8080</p>
+            <p><strong>Status:</strong> <span id="docker-status">Checking...</span></p>
+            <div class="links">
+                <a href="http://localhost:8080" target="_blank">Access Docker App</a>
+                <a href="http://localhost:8080/health" target="_blank">Health Check</a>
+            </div>
+        </div>
+        
+        <div class="service mysql">
+            <h2>🐬 MySQL Connection Test</h2>
+            <p><strong>Technology:</strong> PHP/Apache</p>
+            <p><strong>Port:</strong> 80</p>
+            <p><strong>Status:</strong> <span style="color: green;">✅ Active</span></p>
+            <div class="links">
+                <a href="/mysql-connection.php" target="_blank">Test MySQL Connection</a>
+            </div>
+        </div>
+        
+        <div style="margin-top: 30px; padding: 20px; background-color: #f8f9fa; border-radius: 5px;">
+            <h3>📊 Quick Stats</h3>
+            <p><strong>Instance ID:</strong> <span id="instance-id">Loading...</span></p>
+            <p><strong>Local Time:</strong> <span id="current-time">Loading...</span></p>
+        </div>
+    </div>
+    
+    <button class="refresh-btn" onclick="location.reload()">🔄</button>
+    
+    <script>
+        // Check Docker service status
+        fetch('http://localhost:8080/health')
+            .then(response => response.ok ? 
+                document.getElementById('docker-status').innerHTML = '<span style="color: green;">✅ Running</span>' :
+                document.getElementById('docker-status').innerHTML = '<span style="color: orange;">⚠️ Issues</span>'
+            )
+            .catch(() => document.getElementById('docker-status').innerHTML = '<span style="color: red;">❌ Not Running</span>');
+        
+        // Load instance metadata
+        fetch('http://169.254.169.254/latest/meta-data/instance-id')
+            .then(response => response.text())
+            .then(data => document.getElementById('instance-id').textContent = data)
+            .catch(() => document.getElementById('instance-id').textContent = 'Unknown');
+        
+        // Set current time
+        document.getElementById('current-time').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>

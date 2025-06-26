@@ -237,6 +237,7 @@ module "mysql_provisioner" {
   rds_endpoint             = module.rds.rds_endpoint
   rds_port                 = module.rds.rds_port
   db_name                  = var.db_name
+  alb_dns_name             = module.alb.alb_dns_name
 
   # Bastion host details for remote provisioning
   bastion_public_ip        = module.bastion.bastion_public_ip

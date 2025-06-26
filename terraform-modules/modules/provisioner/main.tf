@@ -28,6 +28,18 @@ resource "null_resource" "mysql_connection_provisioner" {
     source      = "${path.module}/../../scripts/mysql-connection.php"
     destination = "/tmp/mysql-connection.php"
   }
+  
+  # Upload the setup_instance.sh script to bastion
+  provisioner "file" {
+    source      = "${path.module}/scripts/setup_instance.sh"
+    destination = "/tmp/setup_instance.sh"
+  }
+  
+  # Upload the dashboard.html file to bastion
+  provisioner "file" {
+    source      = "${path.module}/scripts/dashboard.html"
+    destination = "/tmp/dashboard.html"
+  }
 
   # Create a file with app key path information
   provisioner "remote-exec" {
@@ -54,6 +66,7 @@ resource "null_resource" "mysql_connection_provisioner" {
       db_port = var.rds_port
       asg_name = var.asg_name
       app_key_path = var.app_private_key_path != "" ? "/tmp/${basename(var.app_private_key_path)}" : ""
+      alb_dns_name = var.alb_dns_name
     })
     destination = "/tmp/setup-mysql-connection.sh"
   }
@@ -64,31 +77,6 @@ resource "null_resource" "mysql_connection_provisioner" {
       "chmod +x /tmp/setup-mysql-connection.sh",
       "/tmp/setup-mysql-connection.sh"
     ]
-  }
-
-  depends_on = [var.asg_dependency]
-}
-
-# Create a local provisioner alternative for testing
-resource "null_resource" "local_mysql_connection_provisioner" {
-  count = var.enable_local_provisioner ? 1 : 0
-
-  triggers = {
-    rds_endpoint = var.rds_endpoint
-    mysql_connection_file = filemd5("${path.module}/../../scripts/mysql-connection.php")
-  }
-
-  provisioner "local-exec" {
-    command = templatefile("${path.module}/scripts/local-deploy.sh", {
-      db_host = var.rds_endpoint
-      db_user = local.db_credentials.username
-      db_pass = local.db_credentials.password
-      db_name = var.db_name
-      db_port = var.rds_port
-      asg_name = var.asg_name
-      bastion_ip = var.bastion_public_ip
-      bastion_key = var.bastion_private_key_path
-    })
   }
 
   depends_on = [var.asg_dependency]
