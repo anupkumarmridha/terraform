@@ -659,6 +659,54 @@ variable "asg_scale_down_cooldown" {
   }
 }
 
+# Jenkins Configuration Variables
+variable "jenkins_instance_type" {
+  description = "Instance type for Jenkins server"
+  type        = string
+  default     = "t3.medium"
+}
+
+variable "jenkins_key_name" {
+  description = "SSH key pair name for Jenkins server"
+  type        = string
+  default     = "anup-training-jenkins-key"
+}
+
+variable "create_jenkins_key_pair" {
+  description = "Whether to create a new key pair for Jenkins"
+  type        = bool
+  default     = true
+}
+
+variable "jenkins_root_volume_size" {
+  description = "Size of the Jenkins root volume in GB"
+  type        = number
+  default     = 30
+}
+
+variable "jenkins_root_volume_type" {
+  description = "Type of the Jenkins root volume"
+  type        = string
+  default     = "gp3"
+  
+  validation {
+    condition     = contains(["gp2", "gp3", "io1", "io2"], var.jenkins_root_volume_type)
+    error_message = "Root volume type must be gp2, gp3, io1, or io2."
+  }
+}
+
+variable "jenkins_enable_detailed_monitoring" {
+  description = "Enable detailed monitoring for Jenkins instance"
+  type        = bool
+  default     = false
+}
+
+variable "enable_mysql_connection_provisioner" {
+  description = "Enable MySQL connection provisioner"
+  type        = bool
+  default     = true
+}
+
 # ASG CloudWatch Alarm Configuration
 variable "asg_cpu_high_threshold" {
   description = "CPU threshold for scaling up"
@@ -903,8 +951,8 @@ variable "db_cloudwatch_logs_retention_in_days" {
 
 
 # MySQL Connection Provisioner Configuration
-variable "enable_mysql_connection_provisioner" {
-  description = "Enable MySQL connection provisioner"
-  type        = bool
-  default     = true
-}
+# variable "enable_mysql_connection_provisioner" {
+#   description = "Enable MySQL connection provisioner"
+#   type        = bool
+#   default     = true
+# }

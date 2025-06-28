@@ -238,17 +238,66 @@ output "rds_replica_endpoints" {
 
 
 # MySQL Provisioner Outputs
-output "mysql_connection_deployment_status" {
-  description = "Status of MySQL connection deployment"
-  value       = var.enable_mysql_connection_provisioner ? module.mysql_provisioner[0].deployment_status : "Provisioner disabled"
+# output "mysql_connection_deployment_status" {
+#   description = "Status of MySQL connection deployment"
+#   value       = var.enable_mysql_connection_provisioner ? module.mysql_provisioner[0].deployment_status : "Provisioner disabled"
+# }
+
+# output "mysql_connection_test_url" {
+#   description = "URL to test MySQL connection"
+#   value       = "http://${module.alb.alb_dns_name}/mysql-connection.php"
+# }
+
+# output "apache_server_dashboard_url" {
+#   description = "URL to access server dashboard"
+#   value       = "http://${module.alb.alb_dns_name}/"
+# }
+
+# Jenkins Outputs
+output "jenkins_instance_id" {
+  description = "ID of the Jenkins EC2 instance"
+  value       = module.jenkins.jenkins_instance_id
 }
 
-output "mysql_connection_test_url" {
-  description = "URL to test MySQL connection"
-  value       = "http://${module.alb.alb_dns_name}/mysql-connection.php"
+output "jenkins_private_ip" {
+  description = "Private IP address of the Jenkins server"
+  value       = module.jenkins.jenkins_private_ip
 }
 
-output "apache_server_dashboard_url" {
-  description = "URL to access server dashboard"
-  value       = "http://${module.alb.alb_dns_name}/"
+output "jenkins_security_group_id" {
+  description = "ID of the Jenkins security group"
+  value       = module.jenkins.jenkins_security_group_id
+}
+
+output "jenkins_iam_role_arn" {
+  description = "ARN of the Jenkins IAM role"
+  value       = module.jenkins.jenkins_iam_role_arn
+}
+
+output "jenkins_key_name" {
+  description = "Name of the key pair used for Jenkins"
+  value       = module.jenkins.key_name
+}
+
+output "jenkins_private_key_path" {
+  description = "Path to the private key file for Jenkins"
+  value       = module.jenkins.private_key_path
+  sensitive   = true
+}
+
+output "jenkins_ssh_command" {
+  description = "SSH command to connect to Jenkins via bastion host"
+  value       = replace(module.jenkins.ssh_command, "<BASTION_PUBLIC_IP>", module.bastion.bastion_public_ip)
+  sensitive   = true
+}
+
+output "jenkins_tunnel_command" {
+  description = "SSH tunnel command to access Jenkins web UI"
+  value       = replace(module.jenkins.tunnel_command, "<BASTION_PUBLIC_IP>", module.bastion.bastion_public_ip)
+  sensitive   = true
+}
+
+output "jenkins_access_url" {
+  description = "URL to access Jenkins after setting up SSH tunnel"
+  value       = module.jenkins.access_url
 }
