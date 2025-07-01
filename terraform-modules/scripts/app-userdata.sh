@@ -7,6 +7,23 @@ exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
 
 echo "🚀 Starting EC2 deployment at $(date)"
 
+
+
+# --- SSM Agent Configuration ---
+echo "🔒 Checking and installing SSM agent..."
+if ! systemctl status amazon-ssm-agent >/dev/null 2>&1; then
+    echo "🔧 SSM agent not found or not running. Installing..."
+    yum install -y amazon-ssm-agent
+    systemctl enable amazon-ssm-agent
+    systemctl start amazon-ssm-agent
+else
+    echo "✅ SSM agent is already installed and running."
+fi
+
+# Log SSM agent status
+systemctl status amazon-ssm-agent || echo "SSM agent not running"
+# --- End SSM Agent Configuration ---
+
 # Update and install Docker (fastest method for Amazon Linux 2)
 echo "📦 Installing Docker..."
 yum update -y

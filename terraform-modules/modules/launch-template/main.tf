@@ -78,7 +78,25 @@ resource "aws_iam_role_policy" "instance_policy" {
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:DescribeLogStreams",
-          "logs:DescribeLogGroups"
+          "logs:DescribeLogGroups",
+          
+          "ssm:SendCommand",
+          "ssm:ListCommands",
+          "ssm:ListCommandInvocations",
+          "ssm:GetCommandInvocation",
+          "ssm:DescribeInstanceInformation",
+          "ssm:DescribeInstanceProperties",
+          "ssm:DescribeInstanceAssociations",
+          "ssm:DescribeDocument",
+          "ssm:GetDocument",
+          "ssm:ListDocuments",
+          "ssm:ListDocumentVersions",
+          "ssm:DescribeDocumentParameters",
+          "ec2:DescribeInstances",
+          "ec2:DescribeInstanceStatus",
+          "ec2:DescribeTags",
+          "iam:ListInstanceProfiles",
+          "iam:ListRoles"
         ]
         Resource = "*"
       },

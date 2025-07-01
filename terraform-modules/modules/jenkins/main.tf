@@ -144,12 +144,19 @@ resource "aws_iam_role_policy" "jenkins_policy" {
             "ec2:DescribeInstanceStatus",
             "ec2:StartInstances",
             "ec2:StopInstances",
+            "ec2:DescribeLaunchTemplates",
+            "ec2:DescribeLaunchTemplateVersions",
+            "ec2:GetLaunchTemplateData",
+            "ec2:RunInstances", 
+            "ec2:CreateTags", 
             "logs:CreateLogGroup",
             "logs:CreateLogStream",
             "logs:PutLogEvents",
             "logs:DescribeLogStreams",
             "logs:DescribeLogGroups",
-            "cloudwatch:PutMetricData"
+            "cloudwatch:PutMetricData",
+            "ssm:SendCommand",
+            
         ]
         Resource = "*"
       }
