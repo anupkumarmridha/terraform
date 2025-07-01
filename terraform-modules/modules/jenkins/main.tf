@@ -135,18 +135,21 @@ resource "aws_iam_role_policy" "jenkins_policy" {
       {
         Effect = "Allow"
         Action = [
-          "autoscaling:DescribeAutoScalingGroups",
-          "autoscaling:DescribeAutoScalingInstances",
-          "ec2:DescribeInstances",
-          "ec2:DescribeInstanceStatus",
-          "ec2:StartInstances",
-          "ec2:StopInstances",
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:DescribeLogStreams",
-          "logs:DescribeLogGroups",
-          "cloudwatch:PutMetricData"
+            "autoscaling:DescribeAutoScalingGroups",
+            "autoscaling:DescribeAutoScalingInstances",
+            "autoscaling:StartInstanceRefresh",
+            "autoscaling:DescribeInstanceRefreshes",
+            "autoscaling:CancelInstanceRefresh",
+            "ec2:DescribeInstances",
+            "ec2:DescribeInstanceStatus",
+            "ec2:StartInstances",
+            "ec2:StopInstances",
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "logs:DescribeLogStreams",
+            "logs:DescribeLogGroups",
+            "cloudwatch:PutMetricData"
         ]
         Resource = "*"
       }
