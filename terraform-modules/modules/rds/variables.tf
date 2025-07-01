@@ -116,7 +116,7 @@ variable "engine" {
 variable "engine_version" {
   description = "Database engine version"
   type        = string
-  default     = "8.0.35"
+  default     = "8.0.40"
 }
 
 variable "port" {

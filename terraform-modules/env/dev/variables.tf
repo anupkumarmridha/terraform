@@ -892,7 +892,7 @@ variable "db_engine" {
 variable "db_engine_version" {
   description = "Database engine version"
   type        = string
-  default     = "8.0.35"
+  default     = "8.0.40"
 }
 
 variable "db_port" {
