@@ -1,0 +1,155 @@
+/*
+# RDS Variables
+variable "db_name" {
+  description = "Name of the database"
+  type        = string
+  default     = "appdb"
+}
+
+variable "db_username" {
+  description = "Username for the database"
+  type        = string
+  default     = "admin"
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "db_allocated_storage" {
+  description = "Initial allocated storage for RDS (GB)"
+  type        = number
+  default     = 20
+}
+
+variable "db_max_allocated_storage" {
+  description = "Maximum allocated storage for RDS auto-scaling (GB)"
+  type        = number
+  default     = 100
+}
+
+variable "db_backup_retention_period" {
+  description = "Backup retention period in days"
+  type        = number
+  default     = 7
+}
+
+variable "multi_az" {
+  description = "Enable Multi-AZ for RDS"
+  type        = bool
+  default     = false
+}
+
+variable "db_storage_type" {
+  description = "Storage type for RDS"
+  type        = string
+  default     = "gp3"
+}
+
+variable "db_deletion_protection" {
+  description = "Enable deletion protection for RDS"
+  type        = bool
+  default     = true
+}
+
+variable "db_final_snapshot" {
+  description = "Create final snapshot before deletion"
+  type        = bool
+  default     = true
+}
+
+variable "create_read_replica" {
+  description = "Create a read replica for the database"
+  type        = bool
+  default     = false
+}
+
+variable "db_replica_count" {
+  description = "Number of read replicas to create"
+  type        = number
+  default     = 1
+}
+
+variable "db_replica_instance_class" {
+  description = "Instance class for read replica"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "db_engine" {
+  description = "Database engine type"
+  type        = string
+  default     = "mysql"
+}
+
+variable "db_engine_version" {
+  description = "Database engine version"
+  type        = string
+  default     = "8.0.40"
+}
+
+variable "db_port" {
+  description = "Database port"
+  type        = number
+  default     = 3306
+}
+
+variable "db_parameter_group_family" {
+  description = "Database parameter group family"
+  type        = string
+  default     = "mysql8.0"
+}
+
+variable "db_backup_window" {
+  description = "Preferred backup window"
+  type        = string
+  default     = "03:00-04:00"
+}
+
+variable "db_maintenance_window" {
+  description = "Preferred maintenance window"
+  type        = string
+  default     = "sun:04:00-sun:05:00"
+}
+
+variable "db_monitoring_interval" {
+  description = "Monitoring interval in seconds (0 to disable)"
+  type        = number
+  default     = 60
+}
+
+variable "db_performance_insights_enabled" {
+  description = "Enable Performance Insights"
+  type        = bool
+  default     = true
+}
+
+variable "db_performance_insights_retention_period" {
+  description = "Performance Insights retention period in days"
+  type        = number
+  default     = 7
+}
+
+variable "db_enabled_cloudwatch_logs_exports" {
+  description = "List of log types to enable for exporting to CloudWatch logs"
+  type        = list(string)
+  default     = ["error", "general", "slowquery"]
+}
+
+variable "db_cloudwatch_logs_retention_in_days" {
+  description = "CloudWatch logs retention period in days"
+  type        = number
+  default     = 7
+}
+
+# MySQL Connection Provisioner Configuration
+variable "enable_mysql_connection_provisioner" {
+  description = "Enable MySQL connection provisioner"
+  type        = bool
+  default     = true
+}
+
+*/
+

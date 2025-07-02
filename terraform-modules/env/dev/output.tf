@@ -192,6 +192,8 @@ output "app_cloudwatch_alarm_arns" {
   value       = module.app_asg.cloudwatch_alarm_arns
 }
 
+
+/*
 # RDS Outputs
 output "rds_endpoint" {
   description = "RDS instance endpoint"
@@ -253,51 +255,60 @@ output "rds_replica_endpoints" {
 #   value       = "http://${module.alb.alb_dns_name}/"
 # }
 
-# Jenkins Outputs
-output "jenkins_instance_id" {
-  description = "ID of the Jenkins EC2 instance"
-  value       = module.jenkins.jenkins_instance_id
+*/
+
+
+
+# Jenkins Cluster Outputs
+output "jenkins_master_instance_id" {
+  description = "ID of the Jenkins master EC2 instance"
+  value       = module.jenkins_cluster.jenkins_master_instance_id
 }
 
-output "jenkins_private_ip" {
-  description = "Private IP address of the Jenkins server"
-  value       = module.jenkins.jenkins_private_ip
+output "jenkins_master_private_ip" {
+  description = "Private IP address of the Jenkins master"
+  value       = module.jenkins_cluster.jenkins_master_private_ip
 }
 
-output "jenkins_security_group_id" {
-  description = "ID of the Jenkins security group"
-  value       = module.jenkins.jenkins_security_group_id
+output "jenkins_agent_instance_ids" {
+  description = "List of Jenkins agent instance IDs"
+  value       = module.jenkins_cluster.jenkins_agent_instance_ids
 }
 
-output "jenkins_iam_role_arn" {
-  description = "ARN of the Jenkins IAM role"
-  value       = module.jenkins.jenkins_iam_role_arn
+output "jenkins_agent_private_ips" {
+  description = "List of Jenkins agent private IP addresses"
+  value       = module.jenkins_cluster.jenkins_agent_private_ips
 }
 
-output "jenkins_key_name" {
-  description = "Name of the key pair used for Jenkins"
-  value       = module.jenkins.key_name
+output "jenkins_master_security_group_id" {
+  description = "ID of the Jenkins master security group"
+  value       = module.jenkins_cluster.jenkins_master_security_group_id
 }
 
-output "jenkins_private_key_path" {
-  description = "Path to the private key file for Jenkins"
-  value       = module.jenkins.private_key_path
-  sensitive   = true
+output "jenkins_agent_security_group_id" {
+  description = "ID of the Jenkins agent security group"
+  value       = module.jenkins_cluster.jenkins_agent_security_group_id
 }
 
-output "jenkins_ssh_command" {
-  description = "SSH command to connect to Jenkins via bastion host"
-  value       = replace(module.jenkins.ssh_command, "<BASTION_PUBLIC_IP>", module.bastion.bastion_public_ip)
+output "jenkins_master_ssh_command" {
+  description = "SSH command to connect to Jenkins master via bastion"
+  value       = replace(module.jenkins_cluster.jenkins_master_ssh_command, "<BASTION_PUBLIC_IP>", module.bastion.bastion_public_ip)
   sensitive   = true
 }
 
 output "jenkins_tunnel_command" {
   description = "SSH tunnel command to access Jenkins web UI"
-  value       = replace(module.jenkins.tunnel_command, "<BASTION_PUBLIC_IP>", module.bastion.bastion_public_ip)
+  value       = replace(module.jenkins_cluster.jenkins_tunnel_command, "<BASTION_PUBLIC_IP>", module.bastion.bastion_public_ip)
   sensitive   = true
 }
 
 output "jenkins_access_url" {
   description = "URL to access Jenkins after setting up SSH tunnel"
-  value       = module.jenkins.access_url
+  value       = module.jenkins_cluster.jenkins_access_url
+}
+
+output "jenkins_cluster_info" {
+  description = "Jenkins cluster information"
+  value       = module.jenkins_cluster.jenkins_cluster_info
+  sensitive   = true
 }

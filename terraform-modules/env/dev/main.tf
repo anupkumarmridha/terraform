@@ -103,25 +103,42 @@ module "bastion" {
   depends_on = [module.vpc, module.security]
 }
 
-# Jenkins Module
-module "jenkins" {
-  source = "../../modules/jenkins"
+
+# Jenkins Cluster Module (Replace the existing Jenkins module)
+module "jenkins_cluster" {
+  source = "../../modules/jenkins-cluster"
 
   project_name       = var.project_name
   environment        = var.environment
   vpc_id             = module.vpc.vpc_id
-  private_subnet_id  = module.vpc.private_subnet_ids[0]
+  private_subnet_ids = module.vpc.private_subnet_ids
   bastion_security_group_id = module.security.bastion_security_group_id
   app_security_group_id = module.security.app_security_group_id
   
-  instance_type      = var.jenkins_instance_type
-  key_name           = var.jenkins_key_name
-  create_key_pair    = var.create_jenkins_key_pair
-  root_volume_size   = var.jenkins_root_volume_size
-  root_volume_type   = var.jenkins_root_volume_type
-  enable_detailed_monitoring = var.jenkins_enable_detailed_monitoring
+  # Jenkins Master Configuration
+  master_instance_type    = var.jenkins_master_instance_type
+  master_key_name         = var.jenkins_master_key_name
+  create_master_key_pair  = var.create_jenkins_master_key_pair
+  master_root_volume_size = var.jenkins_master_root_volume_size
+  master_root_volume_type = var.jenkins_master_root_volume_type
   
-  user_data_script_path = "${path.module}/../../scripts/jenkins-userdata.sh"
+  # Jenkins Agent Configuration
+  enable_agents           = var.enable_jenkins_agents
+  agent_count            = var.jenkins_agent_count
+  agent_instance_type    = var.jenkins_agent_instance_type
+  agent_key_name         = var.jenkins_agent_key_name
+  create_agent_key_pair  = var.create_jenkins_agent_key_pair
+  agent_root_volume_size = var.jenkins_agent_root_volume_size
+  agent_root_volume_type = var.jenkins_agent_root_volume_type
+  
+  # Monitoring and Logging
+  enable_detailed_monitoring = var.jenkins_enable_detailed_monitoring
+  enable_cloudwatch_logs     = true
+  log_retention_days         = 30
+  
+  # High Availability
+  enable_master_backup   = true
+  backup_retention_days  = 7
   
   common_tags = local.common_tags
   
@@ -203,6 +220,7 @@ module "app_asg" {
   depends_on = [module.vpc, module.security, module.alb, module.app_launch_template]
 }
 
+/*
 # RDS Module
 module "rds" {
   source = "../../modules/rds"
@@ -250,44 +268,47 @@ module "rds" {
   common_tags = local.common_tags
   depends_on = [module.vpc, module.security]
 }
+*/
 
 
 
-
-# module "mysql_provisioner" {
-#   source = "../../modules/provisioner"
+/*
+module "mysql_provisioner" {
+  source = "../../modules/provisioner"
   
-#   count = var.enable_mysql_connection_provisioner ? 1 : 0
+  count = var.enable_mysql_connection_provisioner ? 1 : 0
 
-#   # Database connection details
-#   db_credentials_secret_arn = module.rds.db_credentials_secret_arn
-#   rds_endpoint             = module.rds.rds_endpoint
-#   rds_port                 = module.rds.rds_port
-#   db_name                  = var.db_name
-#   alb_dns_name             = module.alb.alb_dns_name
+  # Database connection details
+  db_credentials_secret_arn = module.rds.db_credentials_secret_arn
+  rds_endpoint             = module.rds.rds_endpoint
+  rds_port                 = module.rds.rds_port
+  db_name                  = var.db_name
+  alb_dns_name             = module.alb.alb_dns_name
 
-#   # Bastion host details for remote provisioning
-#   bastion_public_ip        = module.bastion.bastion_public_ip
-#   bastion_private_key_path = module.bastion.private_key_path
+  # Bastion host details for remote provisioning
+  bastion_public_ip        = module.bastion.bastion_public_ip
+  bastion_private_key_path = module.bastion.private_key_path
   
-#   # App instance details
-#   app_private_key_path     = module.app_launch_template.private_key_path
+  # App instance details
+  app_private_key_path     = module.app_launch_template.private_key_path
 
-#   # ASG details
-#   asg_name                    = module.app_asg.autoscaling_group_name
-#   launch_template_latest_version = module.app_launch_template.launch_template_latest_version
-#   asg_dependency              = module.app_asg
+  # ASG details
+  asg_name                    = module.app_asg.autoscaling_group_name
+  launch_template_latest_version = module.app_launch_template.launch_template_latest_version
+  asg_dependency              = module.app_asg
 
-#   # Provisioner configuration
-#   enable_provisioner       = true
-#   enable_local_provisioner = false
+  # Provisioner configuration
+  enable_provisioner       = true
+  enable_local_provisioner = false
 
-#   common_tags = local.common_tags
+  common_tags = local.common_tags
   
-#   depends_on = [
-#     module.rds,
-#     module.bastion,
-#     module.app_asg,
-#     module.app_launch_template
-#   ]
-# }
+  depends_on = [
+    module.rds,
+    module.bastion,
+    module.app_asg,
+    module.app_launch_template
+  ]
+}
+
+*/

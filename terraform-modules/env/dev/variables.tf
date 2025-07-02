@@ -659,50 +659,82 @@ variable "asg_scale_down_cooldown" {
   }
 }
 
-# Jenkins Configuration Variables
-variable "jenkins_instance_type" {
-  description = "Instance type for Jenkins server"
+# Jenkins Master Configuration Variables
+variable "jenkins_master_instance_type" {
+  description = "Instance type for Jenkins master server"
   type        = string
   default     = "t3.medium"
 }
 
-variable "jenkins_key_name" {
-  description = "SSH key pair name for Jenkins server"
+variable "jenkins_master_key_name" {
+  description = "SSH key pair name for Jenkins master server"
   type        = string
-  default     = "anup-training-jenkins-key"
+  default     = "anup-training-jenkins-master-key"
 }
 
-variable "create_jenkins_key_pair" {
-  description = "Whether to create a new key pair for Jenkins"
+variable "create_jenkins_master_key_pair" {
+  description = "Whether to create a new key pair for Jenkins master"
   type        = bool
   default     = true
 }
 
-variable "jenkins_root_volume_size" {
-  description = "Size of the Jenkins root volume in GB"
+variable "jenkins_master_root_volume_size" {
+  description = "Size of the Jenkins master root volume in GB"
+  type        = number
+  default     = 50
+}
+
+variable "jenkins_master_root_volume_type" {
+  description = "Type of the Jenkins master root volume"
+  type        = string
+  default     = "gp3"
+}
+
+# Jenkins Agent Configuration Variables
+variable "enable_jenkins_agents" {
+  description = "Enable Jenkins agents"
+  type        = bool
+  default     = true
+}
+
+variable "jenkins_agent_count" {
+  description = "Number of Jenkins agents to create"
+  type        = number
+  default     = 2
+}
+
+variable "jenkins_agent_instance_type" {
+  description = "Instance type for Jenkins agent servers"
+  type        = string
+  default     = "t3.large"
+}
+
+variable "jenkins_agent_key_name" {
+  description = "SSH key pair name for Jenkins agent servers"
+  type        = string
+  default     = "anup-training-jenkins-agent-key"
+}
+
+variable "create_jenkins_agent_key_pair" {
+  description = "Whether to create a new key pair for Jenkins agents"
+  type        = bool
+  default     = true
+}
+
+variable "jenkins_agent_root_volume_size" {
+  description = "Size of the Jenkins agent root volume in GB"
   type        = number
   default     = 30
 }
 
-variable "jenkins_root_volume_type" {
-  description = "Type of the Jenkins root volume"
+variable "jenkins_agent_root_volume_type" {
+  description = "Type of the Jenkins agent root volume"
   type        = string
   default     = "gp3"
-  
-  validation {
-    condition     = contains(["gp2", "gp3", "io1", "io2"], var.jenkins_root_volume_type)
-    error_message = "Root volume type must be gp2, gp3, io1, or io2."
-  }
 }
 
 variable "jenkins_enable_detailed_monitoring" {
-  description = "Enable detailed monitoring for Jenkins instance"
-  type        = bool
-  default     = false
-}
-
-variable "enable_mysql_connection_provisioner" {
-  description = "Enable MySQL connection provisioner"
+  description = "Enable detailed monitoring for Jenkins instances"
   type        = bool
   default     = true
 }
@@ -804,155 +836,5 @@ variable "asg_service_linked_role_arn" {
   default     = ""
 }
 
-# RDS Variables
-variable "db_name" {
-  description = "Name of the database"
-  type        = string
-  default     = "appdb"
-}
-
-variable "db_username" {
-  description = "Username for the database"
-  type        = string
-  default     = "admin"
-}
-
-variable "db_instance_class" {
-  description = "RDS instance class"
-  type        = string
-  default     = "db.t3.micro"
-}
-
-variable "db_allocated_storage" {
-  description = "Initial allocated storage for RDS (GB)"
-  type        = number
-  default     = 20
-}
-
-variable "db_max_allocated_storage" {
-  description = "Maximum allocated storage for RDS auto-scaling (GB)"
-  type        = number
-  default     = 100
-}
-
-variable "db_backup_retention_period" {
-  description = "Backup retention period in days"
-  type        = number
-  default     = 7
-}
-
-variable "multi_az" {
-  description = "Enable Multi-AZ for RDS"
-  type        = bool
-  default     = false
-}
-
-variable "db_storage_type" {
-  description = "Storage type for RDS"
-  type        = string
-  default     = "gp3"
-}
-
-variable "db_deletion_protection" {
-  description = "Enable deletion protection for RDS"
-  type        = bool
-  default     = true
-}
-
-variable "db_final_snapshot" {
-  description = "Create final snapshot before deletion"
-  type        = bool
-  default     = true
-}
-
-variable "create_read_replica" {
-  description = "Create a read replica for the database"
-  type        = bool
-  default     = false
-}
-
-variable "db_replica_count" {
-  description = "Number of read replicas to create"
-  type        = number
-  default     = 1
-}
-
-variable "db_replica_instance_class" {
-  description = "Instance class for read replica"
-  type        = string
-  default     = "db.t3.micro"
-}
-
-variable "db_engine" {
-  description = "Database engine type"
-  type        = string
-  default     = "mysql"
-}
-
-variable "db_engine_version" {
-  description = "Database engine version"
-  type        = string
-  default     = "8.0.40"
-}
-
-variable "db_port" {
-  description = "Database port"
-  type        = number
-  default     = 3306
-}
-
-variable "db_parameter_group_family" {
-  description = "Database parameter group family"
-  type        = string
-  default     = "mysql8.0"
-}
-
-variable "db_backup_window" {
-  description = "Preferred backup window"
-  type        = string
-  default     = "03:00-04:00"
-}
-
-variable "db_maintenance_window" {
-  description = "Preferred maintenance window"
-  type        = string
-  default     = "sun:04:00-sun:05:00"
-}
-
-variable "db_monitoring_interval" {
-  description = "Monitoring interval in seconds (0 to disable)"
-  type        = number
-  default     = 60
-}
-
-variable "db_performance_insights_enabled" {
-  description = "Enable Performance Insights"
-  type        = bool
-  default     = true
-}
-
-variable "db_performance_insights_retention_period" {
-  description = "Performance Insights retention period in days"
-  type        = number
-  default     = 7
-}
-
-variable "db_enabled_cloudwatch_logs_exports" {
-  description = "List of log types to enable for exporting to CloudWatch logs"
-  type        = list(string)
-  default     = ["error", "general", "slowquery"]
-}
-
-variable "db_cloudwatch_logs_retention_in_days" {
-  description = "CloudWatch logs retention period in days"
-  type        = number
-  default     = 7
-}
 
 
-# MySQL Connection Provisioner Configuration
-# variable "enable_mysql_connection_provisioner" {
-#   description = "Enable MySQL connection provisioner"
-#   type        = bool
-#   default     = true
-# }
