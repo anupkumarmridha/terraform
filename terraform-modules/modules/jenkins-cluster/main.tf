@@ -153,6 +153,18 @@ resource "aws_vpc_security_group_ingress_rule" "master_agent_port_from_agents" {
   description                  = "Jenkins agent communication port"
 }
 
+# Add HTTP access from agents to master for Jenkins web interface
+resource "aws_vpc_security_group_ingress_rule" "master_http_from_agents" {
+  count = var.enable_agents ? 1 : 0
+  
+  security_group_id            = aws_security_group.jenkins_master.id
+  referenced_security_group_id = aws_security_group.jenkins_agent[0].id
+  from_port                    = var.jenkins_port
+  ip_protocol                  = "tcp"
+  to_port                      = var.jenkins_port
+  description                  = "Jenkins HTTP from agents"
+}
+
 resource "aws_vpc_security_group_egress_rule" "master_all_traffic" {
   security_group_id = aws_security_group.jenkins_master.id
   cidr_ipv4         = "0.0.0.0/0"
@@ -389,14 +401,13 @@ resource "aws_instance" "jenkins_master" {
     http_put_response_hop_limit = 2
     instance_metadata_tags      = "enabled"
   }
-
   user_data = base64encode(templatefile("${path.module}/scripts/jenkins-master-userdata.sh", {
     jenkins_port = var.jenkins_port
     agent_port   = var.jenkins_agent_port
     log_group    = var.enable_cloudwatch_logs ? aws_cloudwatch_log_group.jenkins_master[0].name : ""
-    JENKINS_HOME = var.jenkins_home
-    ITEM_FULLNAME  = "${local.name_prefix}-jenkins-master"
-    ITEM_ROOTDIR  = var.jenkins_home
+    jenkins_home_dir = var.jenkins_home
+    item_fullname  = "${local.name_prefix}-jenkins-master"
+    item_rootdir  = var.jenkins_home
   }))
 
   tags = merge(var.common_tags, {

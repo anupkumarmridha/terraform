@@ -137,7 +137,7 @@ module "jenkins_cluster" {
   log_retention_days         = 30
   
   # High Availability
-  enable_master_backup   = true
+  enable_master_backup   = false
   backup_retention_days  = 7
   
   common_tags = local.common_tags
