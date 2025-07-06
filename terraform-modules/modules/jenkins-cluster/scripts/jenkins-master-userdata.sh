@@ -91,14 +91,63 @@ rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
 
 echo "Installing Jenkins..."
 dnf install -y jenkins
-
 # Create Jenkins directories
 echo "Setting up Jenkins directories..."
 mkdir -p $JENKINS_HOME
 mkdir -p $JENKINS_HOME/logs
+mkdir -p $JENKINS_HOME/init.groovy.d
 mkdir -p /var/log/jenkins
 chown -R jenkins:jenkins $JENKINS_HOME
 chown -R jenkins:jenkins /var/log/jenkins
+
+# Create Jenkins initial admin user
+echo "Creating Jenkins admin user..."
+cat > $JENKINS_HOME/init.groovy.d/basic-security.groovy << 'GROOVY_EOF'
+#!groovy
+
+import jenkins.model.*
+import hudson.security.*
+import hudson.security.csrf.DefaultCrumbIssuer
+import jenkins.security.s2m.AdminWhitelistRule
+
+def instance = Jenkins.getInstance()
+
+// Only run this if Jenkins is not already configured
+if (!instance.getInstallState().isSetupComplete()) {
+    println "Setting up Jenkins admin user..."
+    
+    // Create admin user
+    def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+    instance.setSecurityRealm(hudsonRealm)
+    
+    def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+    strategy.setAllowAnonymousRead(false)
+    instance.setAuthorizationStrategy(strategy)
+    
+    // Create admin user with username: admin, password: admin123
+    def user = hudsonRealm.createAccount("admin", "admin123")
+    user.save()
+    
+    // Enable CSRF protection
+    instance.setCrumbIssuer(new DefaultCrumbIssuer(true))
+    
+    // Disable agent-to-master security for now (can be re-enabled later)
+    instance.getInjector().getInstance(AdminWhitelistRule.class).setMasterKillSwitch(false)
+    
+    // Mark setup as complete
+    instance.setInstallState(InstallState.INITIAL_SETUP_COMPLETED)
+    
+    instance.save()
+    
+    println "Jenkins admin user created successfully"
+    println "Username: admin"
+    println "Password: admin123"
+} else {
+    println "Jenkins is already configured, skipping user creation"
+}
+GROOVY_EOF
+
+chown jenkins:jenkins $JENKINS_HOME/init.groovy.d/basic-security.groovy
 
 # Configure Jenkins system settings
 echo "Configuring Jenkins system settings..."
@@ -106,7 +155,7 @@ cat > /etc/sysconfig/jenkins << EOF
 JENKINS_HOME="$JENKINS_HOME"
 JENKINS_JAVA_CMD="$JAVA_HOME/bin/java"
 JENKINS_USER="jenkins"
-JENKINS_JAVA_OPTIONS="-Djava.awt.headless=true -Djenkins.install.runSetupWizard=false -Xmx2g"
+JENKINS_JAVA_OPTIONS="-Djava.awt.headless=true -Xmx2g"
 JENKINS_PORT="$JENKINS_PORT"
 JENKINS_LISTEN_ADDRESS=""
 JENKINS_DEBUG_LEVEL="5"
@@ -116,54 +165,6 @@ JENKINS_HANDLER_IDLE="20"
 JENKINS_ARGS=""
 EOF
 
-# Create Jenkins main configuration
-echo "Creating Jenkins main configuration..."
-cat > $JENKINS_HOME/config.xml << 'JENKINS_CONFIG_EOF'
-<?xml version='1.1' encoding='UTF-8'?>
-<hudson>
-  <version>2.414.3</version>
-  <numExecutors>0</numExecutors>
-  <mode>NORMAL</mode>
-  <useSecurity>true</useSecurity>
-  <authorizationStrategy class="hudson.security.FullControlOnceLoggedInAuthorizationStrategy">
-    <denyAnonymousReadAccess>true</denyAnonymousReadAccess>
-  </authorizationStrategy>
-  <securityRealm class="hudson.security.HudsonPrivateSecurityRealm">
-    <disableSignup>false</disableSignup>
-    <enableCaptcha>false</enableCaptcha>
-  </securityRealm>
-  <disableRememberMe>false</disableRememberMe>
-  <projectNamingStrategy class="jenkins.model.ProjectNamingStrategy$DefaultProjectNamingStrategy"/>
-  <workspaceDir>$${JENKINS_HOME}/workspace/$${ITEM_FULLNAME}</workspaceDir>
-  <buildsDir>$${ITEM_ROOTDIR}/builds/$${ITEM_FULLNAME}</buildsDir>
-  <markupFormatter class="hudson.markup.EscapedMarkupFormatter"/>
-  <jdks/>
-  <viewsTabBar class="hudson.views.DefaultViewsTabBar"/>
-  <myViewsTabBar class="hudson.views.DefaultMyViewsTabBar"/>
-  <clouds/>
-  <scmCheckoutRetryCount>0</scmCheckoutRetryCount>
-  <views>
-    <hudson.model.AllView>
-      <owner class="hudson" reference="../../.."/>
-      <name>all</name>
-      <filterExecutors>false</filterExecutors>
-      <filterQueue>false</filterQueue>
-      <properties class="hudson.model.View$$PropertyList"/>
-    </hudson.model.AllView>
-  </views>
-  <primaryView>all</primaryView>
-  <slaveAgentPort>AGENT_PORT_PLACEHOLDER</slaveAgentPort>
-  <label></label>
-  <crumbIssuer class="hudson.security.csrf.DefaultCrumbIssuer">
-    <excludeClientIPFromCrumb>false</excludeClientIPFromCrumb>
-  </crumbIssuer>
-  <nodeProperties/>
-  <globalNodeProperties/>
-</hudson>
-JENKINS_CONFIG_EOF
-
-# Replace placeholder with actual agent port
-sed -i "s/AGENT_PORT_PLACEHOLDER/$AGENT_PORT/g" $JENKINS_HOME/config.xml
 
 # Start and enable Jenkins
 echo "Starting Jenkins service..."

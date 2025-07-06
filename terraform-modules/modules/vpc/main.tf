@@ -185,6 +185,7 @@ resource "aws_flow_log" "vpc_flow_log" {
   
   lifecycle {
     create_before_destroy = true
+
   }
 }
 
@@ -199,8 +200,6 @@ resource "aws_cloudwatch_log_group" "vpc_flow_log" {
 
   lifecycle {
     create_before_destroy = true
-    # Prevent recreation if the log group already exists
-    prevent_destroy = true
     ignore_changes = [name]
   }
 }
