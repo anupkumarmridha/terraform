@@ -312,14 +312,32 @@ resource "aws_iam_role_policy" "jenkins_agent_policy" {
       {
         Effect = "Allow"
         Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:DescribeLogStreams",
-          "logs:DescribeLogGroups",
-          "cloudwatch:PutMetricData",
-          "ec2:DescribeInstances",
-          "ec2:DescribeInstanceStatus"
+            "autoscaling:DescribeAutoScalingGroups",
+            "autoscaling:DescribeAutoScalingInstances",
+            "autoscaling:StartInstanceRefresh",
+            "autoscaling:DescribeInstanceRefreshes",
+            "autoscaling:CancelInstanceRefresh",
+            "autoscaling:DescribeLifecycleHooks",
+            "ec2:DescribeInstances",
+            "ec2:DescribeInstanceStatus",
+            "ec2:StartInstances",
+            "ec2:StopInstances",
+            "ec2:DescribeLaunchTemplates",
+            "ec2:DescribeLaunchTemplateVersions",
+            "ec2:GetLaunchTemplateData",
+            "ec2:RunInstances", 
+            "ec2:CreateTags", 
+            "cloudwatch:PutMetricData",
+            "ec2:DescribeInstances",
+            "ec2:DescribeInstanceStatus",
+            "elasticloadbalancing:DescribeTargetGroups",
+            "logs:CreateLogGroup",
+            "logs:CreateLogStream",
+            "logs:PutLogEvents",
+            "logs:DescribeLogStreams",
+            "logs:DescribeLogGroups",
+            "cloudwatch:PutMetricData",
+            "ssm:SendCommand",
         ]
         Resource = "*"
       }
